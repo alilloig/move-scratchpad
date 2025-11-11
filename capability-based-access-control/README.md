@@ -1,4 +1,4 @@
-#Capability-based Access Control
+# Capability-based Access Control
 This package attempts to showcase how to enforce permissions based access control using [capability](https://en.wikipedia.org/wiki/Capability-based_security) objects, rather than mapping addresses to permissions.
 This implementation allows revoking capabilities by tying them to a version number that can be pumped by the Admin to revoke all previously issued capabilities for a certain permission. This permissions can be used for restricting access to shared objects methods and for restricting it to other contract's `public fun`s.
 
