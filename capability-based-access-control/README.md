@@ -17,7 +17,7 @@ Defines a simple capability object with the addition of a `version` field that e
 A dummy module consuming capabilities as an example of how to use them.
 The admin of the module can grant any account the ability to mint new shared `Hero` objects. They can also grant permissions for mutating those objects and revoke those permissions.
 
-#### (Bonus) Bound Capability
+### (Bonus) Bound Capability
 At this point you should have realized I'm quite against checking `msg.sender` in any way, but if you are into that, a `BoundCapability` has no `store` ability, so you can issue it with `factory::issue_bound_capability<T, P>` and whoever stores it will keep it forever.
 
 #### TBD
