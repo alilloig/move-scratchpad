@@ -1,0 +1,8 @@
+[package]
+name = "cac"
+edition = "2024.beta"
+# license = "The Unlicense"
+# authors = ["Alvaro Lillo (alilloig@gmail.com)"]
+
+[addresses]
+cac = "0x0"
