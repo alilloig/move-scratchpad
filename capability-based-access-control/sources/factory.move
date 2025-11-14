@@ -68,11 +68,11 @@ public fun issue_capability<T, P>(
     self: &CapabilityFactory<T>, 
     _cap: &CapabilityFactoryCap<T>, 
     ctx: &mut TxContext
-): Capability<P> {
+): Capability<T, P> {
     // Check if the permission is valid
     assert!(self.perms.contains(&type_name::with_defining_ids<P>()), EInvalidPermission);
     // Issue a new capability
-    capability::new<P>(ctx)
+    capability::new<T, P>(ctx)
 }
 
 // Pumps the version of the permission so previously issued capabilities are invalidated.
@@ -92,9 +92,9 @@ public fun issue_bound_capability<T, P>(
     self: &CapabilityFactory<T>, 
     _cap: &CapabilityFactoryCap<T>,
     ctx: &mut TxContext
-): BoundCapability<P> {
+): BoundCapability<T, P> {
     // Check if the permission is valid
     assert!(self.perms.contains(&type_name::with_defining_ids<P>()), EInvalidPermission);
     // Issue a new capability
-    bound_capability::new<P>(ctx)
+    bound_capability::new<T, P>(ctx)
 }

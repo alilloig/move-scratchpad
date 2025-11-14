@@ -1,17 +1,17 @@
 module cac::bound_capability;
 
-public struct BoundCapability<phantom P> has key {
+public struct BoundCapability<phantom T, phantom P> has key {
     id: UID,
     version: u64,
 }
 
-public fun new<P>(ctx: &mut TxContext): BoundCapability<P> {
-    BoundCapability<P> {
+public fun new<T, P>(ctx: &mut TxContext): BoundCapability<T, P> {
+    BoundCapability<T, P> {
         id: object::new(ctx),
         version: 0,
     }
 }
 
-public fun get_version<P>(self: &BoundCapability<P>): u64 {
+public fun get_version<T, P>(self: &BoundCapability<T, P>): u64 {
     self.version
 }
