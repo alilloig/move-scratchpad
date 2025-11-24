@@ -1,6 +1,7 @@
 module cac::cap_hero;
 
 use std::type_name::{Self, TypeName};
+use std::internal::{Self, Permit};
 use sui::package::{Self, Publisher};
 use sui::vec_map::{Self, VecMap};
 use cac::capability::{Capability};
@@ -41,7 +42,7 @@ public struct Hero has key, store {
     attack: u64,
     defense: u64,
     speed: u64,
-    cap_vers: VecMap<TypeName, u64>,
+    cap_vers: VecMap<Permit, u64>,
 }
 
 #[allow(lint(share_owned))]
@@ -67,7 +68,7 @@ fun init (otw: CAP_HERO, ctx: &mut TxContext) {
 }
 
 // Mints and shares a new Hero bc is controlled by a DAO or something idk so it needs to be shared.
-public fun mint_hero(cap: &Capability<Hero, Mint>, factory: &CapabilityFactory<Hero>, ctx: &mut TxContext) {
+public fun mint_hero(cap: &Capability<Mint>, factory: &CapabilityFactory<Hero>, ctx: &mut TxContext) {
     // Check if the mint capability is in effect.
     assert!(cap.get_version() == factory.get_permissions().get(&type_name::with_defining_ids<Mint>()), ENotMinter);
     let hero = Hero {
@@ -82,39 +83,39 @@ public fun mint_hero(cap: &Capability<Hero, Mint>, factory: &CapabilityFactory<H
     transfer::public_share_object(hero);
 }
 
-public fun level_up(self: &mut Hero, cap: &Capability<Hero, LevelUp>) {
+public fun level_up(self: &mut Hero, cap: &Capability<LevelUp>) {
     assert!(cap.get_version() == self.cap_vers.get(&type_name::with_defining_ids<LevelUp>()), ENotLevelUp);
     self.level = self.level + 1;
 }
 
-public fun increase_hp(self: &mut Hero, cap: &Capability<Hero, IncreaseHP>) {
+public fun increase_hp(self: &mut Hero, cap: &Capability<IncreaseHP>) {
     assert!(cap.get_version() == self.cap_vers.get(&type_name::with_defining_ids<IncreaseHP>()), ENotIncreaseHP);
     self.hp = self.hp + 10;
 }
 
-public fun increase_attack(self: &mut Hero, cap: &Capability<Hero, IncreaseAttack>) {
+public fun increase_attack(self: &mut Hero, cap: &Capability<IncreaseAttack>) {
     assert!(cap.get_version() == self.cap_vers.get(&type_name::with_defining_ids<IncreaseAttack>()), ENotIncreaseAttack);
     self.attack = self.attack + 1;
 }
 
-public fun increase_defense(self: &mut Hero, cap: &Capability<Hero, IncreaseDefense>) {
+public fun increase_defense(self: &mut Hero, cap: &Capability<IncreaseDefense>) {
     assert!(cap.get_version() == self.cap_vers.get(&type_name::with_defining_ids<IncreaseDefense>()), ENotIncreaseDefense);
     self.defense = self.defense + 1;
 }
 
-public fun increase_speed(self: &mut Hero, cap: &Capability<Hero, IncreaseSpeed>) {
+public fun increase_speed(self: &mut Hero, cap: &Capability<IncreaseSpeed>) {
     assert!(cap.get_version() == self.cap_vers.get(&type_name::with_defining_ids<IncreaseSpeed>()), ENotIncreaseSpeed);
     self.speed = self.speed + 1;
 }
 
-public fun burn(self: Hero, cap: &Capability<Hero, Burn>) {
+public fun burn(self: Hero, cap: &Capability<Burn>) {
     assert!(cap.get_version() == self.cap_vers.get(&type_name::with_defining_ids<Burn>()), ENotBurn);
     let Hero { id, level, hp, attack, defense, speed, cap_vers } = self;
     id.delete();
 }
 
 // Issues a new capability for the recipient to perform the given permission P on Hero objects.
-public fun issue_capability<P>(
+public fun issue_capability<Hero, P>(
     self: &CapabilityFactory<Hero>, 
     _cap: &CapabilityFactoryCap<Hero>,
     recipient: address,
@@ -130,13 +131,13 @@ public fun issue_capability<P>(
 
 // Revokes a capability for the given permission P by pumping the version of the permission
 // both in the Hero and in the CapabilityFactory objects.
-public fun revoke_capability<P>(
+public fun revoke_capability<Hero, P>(
     self: &mut Hero,
     factory: &mut CapabilityFactory<Hero>, 
     _cap: &CapabilityFactoryCap<Hero>,
 ) {
     // Pump the version of the permission P in the Hero object.
-    let hero_cap_ver = self.cap_vers.get_mut(&type_name::with_defining_ids<P>());
+    let hero_cap_ver = self.cap_vers.get_mut(Permit<P>());
     *hero_cap_ver = *hero_cap_ver + 1;
     // Pump the version of the permission P in the CapabilityFactory object.
     factory.revoke_capability<Hero, P>(_cap);

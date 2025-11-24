@@ -1,6 +1,7 @@
 module cac::factory;
 
 use std::type_name::{Self, TypeName};
+use std::internal::{Self, Permit};
 use sui::package::{Self, Publisher};
 use sui::vec_map::{Self, VecMap};
 use cac::capability::{Self, Capability};
@@ -16,7 +17,7 @@ const EInvalidPermission: u64 = 1;
 // Keeps track of the version of each permission.
 public struct CapabilityFactory<phantom T> has key, store {
     id: UID,
-    perms: VecMap<TypeName, u64>,
+    perms: VecMap<Permit, u64>,
 }
 
 // The capability that grants the ability to issue and revoke capabilities for a given type T.
@@ -49,17 +50,17 @@ entry fun default<T>(pub: &Publisher, ctx: &mut TxContext) {
 }
 
 // Adds a new permission to the CapabilityFactory. Insert aborts if the permission already exists.
-public fun add_permission<T>(self: &mut CapabilityFactory<T>, _cap: &CapabilityFactoryCap<T>, perm: TypeName) {
+public fun add_permission<T>(self: &mut CapabilityFactory<T>, _cap: &CapabilityFactoryCap<T>, perm: Permit) {
     self.perms.insert(perm, 0);
 }
 
 // Removes a permission from the CapabilityFactory. Remove aborts if the permission does not exist.
-public fun remove_permission<T>(self: &mut CapabilityFactory<T>, _cap: &CapabilityFactoryCap<T>, perm: TypeName) {
+public fun remove_permission<T>(self: &mut CapabilityFactory<T>, _cap: &CapabilityFactoryCap<T>, perm: Permit) {
     self.perms.remove(&perm);
 }
 
 // Get the permissions along with their versions.
-public fun get_permissions<T>(self: &CapabilityFactory<T>): VecMap<TypeName, u64> {
+public fun get_permissions<T>(self: &CapabilityFactory<T>): VecMap<Permit, u64> {
     self.perms
 }
 
@@ -68,11 +69,11 @@ public fun issue_capability<T, P>(
     self: &CapabilityFactory<T>, 
     _cap: &CapabilityFactoryCap<T>, 
     ctx: &mut TxContext
-): Capability<T, P> {
+): Capability<P> {
     // Check if the permission is valid
     assert!(self.perms.contains(&type_name::with_defining_ids<P>()), EInvalidPermission);
     // Issue a new capability
-    capability::new<T, P>(ctx)
+    capability::new<P>(ctx)
 }
 
 // Pumps the version of the permission so previously issued capabilities are invalidated.
@@ -85,16 +86,4 @@ public fun revoke_capability<T, P>(
     // Pump the version of the permission
     let capability_version = self.perms.get_mut(&type_name::with_defining_ids<P>());
     *capability_version = *capability_version + 1;
-}
-
-// Issues a new capability for a recipient address.
-public fun issue_bound_capability<T, P>(
-    self: &CapabilityFactory<T>, 
-    _cap: &CapabilityFactoryCap<T>,
-    ctx: &mut TxContext
-): BoundCapability<T, P> {
-    // Check if the permission is valid
-    assert!(self.perms.contains(&type_name::with_defining_ids<P>()), EInvalidPermission);
-    // Issue a new capability
-    bound_capability::new<T, P>(ctx)
 }
