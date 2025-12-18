@@ -12,5 +12,6 @@ const txn = await client.getObject({
 });
 
 if (txn.data!.content!.dataType === "moveObject") {
+    console.log(txn.data!.content!.fields);
     console.log((txn.data!.content!.fields as any).inner);
 }
